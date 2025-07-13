@@ -11,6 +11,7 @@ import { trpc } from "@/lib/api";
 const Index = () => {
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
   const [selectedChatName, setSelectedChatName] = useState<string>("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
   const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
@@ -23,6 +24,7 @@ const Index = () => {
     setIsChatDialogOpen(true);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleNodeClick = (node: any) => {
     // Find the chat data for this user
     if (chatsData?.messages) {
