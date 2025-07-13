@@ -43,7 +43,7 @@ export const ProfileDetails = ({ isOpen, onClose, profile }: ProfileDetailsProps
           </DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Profile Info */}
           <div className="lg:col-span-1 space-y-4">
             <div className="flex flex-col items-center text-center">
@@ -82,22 +82,20 @@ export const ProfileDetails = ({ isOpen, onClose, profile }: ProfileDetailsProps
           </div>
 
           {/* Recent Chats */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-2">
             <div className="bg-slate-900 rounded-lg p-4">
               <h4 className="text-white font-semibold mb-3 flex items-center">
                 <MessageCircle className="h-4 w-4 mr-2 text-teal-500" />
                 All Chat Messages
               </h4>
-              <ScrollArea className="h-48">
+              <ScrollArea className="h-96">
                 <div className="space-y-3">
                   {profile.recentChats.map((chat, index) => (
                     <div key={index} className="border-b border-slate-700 pb-2">
-                      <p className="text-slate-300 text-xs mb-1">{chat.message}</p>
+                      <p className="text-slate-300 text-sm mb-1">{chat.message}</p>
                       <div className="flex justify-between items-center">
                         <span className="text-slate-500 text-xs">{chat.timestamp}</span>
-                        <Badge className={`text-xs ${getRiskColor(chat.risk)}`}>
-                          {chat.risk}
-                        </Badge>
+                    
                       </div>
                     </div>
                   ))}
