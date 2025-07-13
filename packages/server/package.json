@@ -1,0 +1,27 @@
+{
+  "name": "server",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "nodemon": "^3.1.10"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "scripts": {
+    "start": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.2.12",
+    "@fastify/cors": "^11.0.1",
+    "@trpc/server": "^11.4.3",
+    "@types/markdown-pdf": "^9.0.5",
+    "ai": "^4.3.17",
+    "fastify": "^5.4.0",
+    "markdown-pdf": "^11.0.0",
+    "md-to-pdf": "^5.2.4",
+    "zod": "^4.0.5"
+  }
+}

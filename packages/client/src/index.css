@@ -1,0 +1,80 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 15 23 42; /* slate-900 equivalent */
+    --foreground: 248 250 252; /* slate-50 equivalent */
+
+    --card: 30 41 59; /* slate-800 equivalent */
+    --card-foreground: 248 250 252;
+
+    --popover: 15 23 42;
+    --popover-foreground: 248 250 252;
+
+    --primary: 14 165 233; /* sky-500 equivalent */
+    --primary-foreground: 248 250 252;
+
+    --secondary: 51 65 85; /* slate-700 equivalent */
+    --secondary-foreground: 248 250 252;
+
+    --muted: 51 65 85;
+    --muted-foreground: 148 163 184; /* slate-400 equivalent */
+
+    --accent: 20 184 166; /* teal-500 equivalent */
+    --accent-foreground: 15 23 42;
+
+    --destructive: 239 68 68; /* red-500 equivalent */
+    --destructive-foreground: 248 250 252;
+
+    --border: 51 65 85;
+    --input: 51 65 85;
+    --ring: 20 184 166;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 30 41 59;
+    --sidebar-foreground: 248 250 252;
+    --sidebar-primary: 20 184 166;
+    --sidebar-primary-foreground: 15 23 42;
+    --sidebar-accent: 51 65 85;
+    --sidebar-accent-foreground: 248 250 252;
+    --sidebar-border: 51 65 85;
+    --sidebar-ring: 20 184 166;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-800;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-500;
+  }
+}
