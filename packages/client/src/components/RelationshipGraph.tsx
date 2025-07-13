@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import * as d3 from "d3";
-import { ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/api";
 
 interface Node extends d3.SimulationNodeDatum {
@@ -116,39 +114,7 @@ export const RelationshipGraph = ({ onNodeClick }: RelationshipGraphProps) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Create stable zoom handlers
-  const handleZoomIn = useCallback(() => {
-    if (svgRef.current) {
-      const svg = d3.select(svgRef.current);
-      svg
-        .transition()
-        .duration(300)
-        .call(d3.zoom<SVGSVGElement, unknown>().scaleBy as any, 1.5);
-    }
-  }, []);
 
-  const handleZoomOut = useCallback(() => {
-    if (svgRef.current) {
-      const svg = d3.select(svgRef.current);
-      svg
-        .transition()
-        .duration(300)
-        .call(d3.zoom<SVGSVGElement, unknown>().scaleBy as any, 1 / 1.5);
-    }
-  }, []);
-
-  const handleReset = useCallback(() => {
-    if (svgRef.current) {
-      const svg = d3.select(svgRef.current);
-      svg
-        .transition()
-        .duration(500)
-        .call(
-          d3.zoom<SVGSVGElement, unknown>().transform as any,
-          d3.zoomIdentity
-        );
-    }
-  }, []);
 
   // Stable node click handler
   const handleNodeClick = useCallback(
@@ -307,33 +273,6 @@ export const RelationshipGraph = ({ onNodeClick }: RelationshipGraphProps) => {
       ref={containerRef}
       className="relative w-full h-full bg-slate-900 rounded-lg border border-slate-700 overflow-hidden"
     >
-      <div className="absolute top-4 right-4 z-10 flex space-x-2">
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleZoomIn}
-          className="bg-slate-800 hover:bg-slate-700 text-white border-slate-600"
-        >
-          <ZoomIn className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleZoomOut}
-          className="bg-slate-800 hover:bg-slate-700 text-white border-slate-600"
-        >
-          <ZoomOut className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleReset}
-          className="bg-slate-800 hover:bg-slate-700 text-white border-slate-600"
-        >
-          <RotateCcw className="h-4 w-4" />
-        </Button>
-      </div>
-
       <div className="absolute top-4 left-4 z-10">
         <div className="text-white text-lg font-semibold mb-2">
           {config?.current_user.name}
