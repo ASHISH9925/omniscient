@@ -24,81 +24,79 @@ export const RelationshipGraph = ({ onNodeClick }: RelationshipGraphProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const simulationRef = useRef<d3.Simulation<Node, Link> | null>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [nodePositions, setNodePositions] = useState<Map<string, { x: number; y: number }>>(new Map());
 
   const { data: config, isPending: isConfigPending } = trpc.config.useQuery();
+  const { data: chatsData, isPending: isChatsPending } = trpc.data.useQuery();
 
-  // Memoize the mock data to prevent re-generation on every render
+  // Memoize the data to prevent re-generation on every render
   const { nodes, links } = useMemo(() => {
-    const nodes: Node[] = [
-      {
-        id: "john",
-        name: "John Doe",
-        type: "person",
-        risk: "high",
-        image:
-          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-      },
-      {
-        id: "jane",
-        name: "Jane Smith",
-        type: "person",
-        risk: "medium",
-        image:
-          "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face",
-      },
-      {
-        id: "mike",
-        name: "Mike Johnson",
-        type: "person",
-        risk: "low",
-        image:
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-      },
-      {
-        id: "device1",
-        name: "Laptop-001",
-        type: "device",
-        risk: "medium",
-        image:
-          "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=100&h=100&fit=crop",
-      },
-      {
-        id: "device2",
-        name: "Phone-002",
-        type: "device",
-        risk: "high",
-        image:
-          "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=100&h=100&fit=crop",
-      },
-      {
-        id: "loc1",
-        name: "Office-A",
-        type: "location",
-        risk: "low",
-        image:
-          "https://images.unsplash.com/photo-1497366216548-37526070297c?w=100&h=100&fit=crop",
-      },
-      {
-        id: "loc2",
-        name: "Cafe-B",
-        type: "location",
-        risk: "medium",
-        image:
-          "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=100&h=100&fit=crop",
-      },
-    ];
+    if (!chatsData?.messages) {
+      return { nodes: [], links: [] };
+    }
 
-    const links: Link[] = [
-      { id: "john-jane", source: "john", target: "jane", strength: 0.8 },
-      { id: "john-device1", source: "john", target: "device1", strength: 0.9 },
-      { id: "jane-device2", source: "jane", target: "device2", strength: 0.7 },
-      { id: "mike-loc1", source: "mike", target: "loc1", strength: 0.6 },
-      { id: "john-loc2", source: "john", target: "loc2", strength: 0.5 },
-      { id: "device1-loc1", source: "device1", target: "loc1", strength: 0.4 },
-    ];
+    const nodes: Node[] = [];
+    const links: Link[] = [];
+    const nodeMap = new Map<string, Node>();
+    const currentUser = chatsData.current_user.name;
+
+    // Add current user as a node
+    const currentUserNode: Node = {
+      id: currentUser.toLowerCase().replace(/\s+/g, '-'),
+      name: currentUser,
+      type: "person",
+      risk: "high", // Current user is high risk based on the conversations
+      image: chatsData.current_user.image,
+    };
+    nodes.push(currentUserNode);
+    nodeMap.set(currentUser.toLowerCase(), currentUserNode);
+
+    // Process each chat to extract users and create relationships
+    chatsData.messages.forEach((chat, chatIndex) => {
+      const otherUser = chat.username;
+      const otherUserKey = otherUser.toLowerCase().replace(/\s+/g, '-');
+      
+      // Calculate risk level based on message content
+      const allMessages = chat.messages.join(' ').toLowerCase();
+      const suspiciousWords = [
+        'drug', 'dealer', 'police', 'arrested', 'weed', 'steroids', 
+        'abduction', 'trafficking', 'mafia', 'illegal', 'smuggle',
+        'organ', 'spare parts', 'black money', 'cash', 'no upi'
+      ];
+      
+      const suspiciousScore = suspiciousWords.reduce((score, word) => {
+        return score + (allMessages.includes(word) ? 1 : 0);
+      }, 0);
+      
+      let risk: "high" | "medium" | "low" = "low";
+      if (suspiciousScore >= 5) risk = "high";
+      else if (suspiciousScore >= 2) risk = "medium";
+
+      // Create node for the other user if not already exists
+      if (!nodeMap.has(otherUserKey)) {
+        const otherUserNode: Node = {
+          id: otherUserKey,
+          name: otherUser,
+          type: "person",
+          risk,
+          image: chat.profile?.image,
+        };
+        nodes.push(otherUserNode);
+        nodeMap.set(otherUserKey, otherUserNode);
+      }
+
+      // Create link between current user and other user
+      const linkStrength = Math.min(0.3 + (suspiciousScore * 0.1), 0.9);
+      links.push({
+        id: `${currentUser.toLowerCase()}-${otherUserKey}`,
+        source: currentUser.toLowerCase(),
+        target: otherUserKey,
+        strength: linkStrength,
+      });
+    });
 
     return { nodes, links };
-  }, []);
+  }, [chatsData]);
 
   // Handle container resize
   useEffect(() => {
@@ -114,8 +112,6 @@ export const RelationshipGraph = ({ onNodeClick }: RelationshipGraphProps) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-
-
   // Stable node click handler
   const handleNodeClick = useCallback(
     (node: Node) => {
@@ -127,7 +123,7 @@ export const RelationshipGraph = ({ onNodeClick }: RelationshipGraphProps) => {
   );
 
   useEffect(() => {
-    if (!svgRef.current || dimensions.width === 0 || dimensions.height === 0)
+    if (!svgRef.current || dimensions.width === 0 || dimensions.height === 0 || nodes.length === 0)
       return;
 
     const svg = d3.select(svgRef.current);
@@ -161,6 +157,17 @@ export const RelationshipGraph = ({ onNodeClick }: RelationshipGraphProps) => {
       .force("charge", d3.forceManyBody().strength(-300))
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("collision", d3.forceCollide().radius(35));
+
+    // Apply preserved positions if available
+    nodes.forEach(node => {
+      const preserved = nodePositions.get(node.id);
+      if (preserved) {
+        node.x = preserved.x;
+        node.y = preserved.y;
+        node.fx = preserved.x;
+        node.fy = preserved.y;
+      }
+    });
 
     simulationRef.current = simulation;
 
@@ -238,7 +245,7 @@ export const RelationshipGraph = ({ onNodeClick }: RelationshipGraphProps) => {
         };
         return colors[d.risk];
       })
-      .attr("stroke-width", 3);
+      .attr("stroke-width", 1);
 
     // Add labels
     node
@@ -261,12 +268,37 @@ export const RelationshipGraph = ({ onNodeClick }: RelationshipGraphProps) => {
       node.attr("transform", (d) => `translate(${d.x},${d.y})`);
     });
 
+    // Save positions when simulation ends
+    simulation.on("end", () => {
+      const positions = new Map<string, { x: number; y: number }>();
+      nodes.forEach(node => {
+        if (node.x !== undefined && node.y !== undefined) {
+          positions.set(node.id, { x: node.x, y: node.y });
+        }
+      });
+      setNodePositions(positions);
+      
+      // Release fixed positions after saving
+      nodes.forEach(node => {
+        node.fx = null;
+        node.fy = null;
+      });
+    });
+
     return () => {
       if (simulationRef.current) {
         simulationRef.current.stop();
       }
     };
   }, [dimensions, nodes, links, handleNodeClick]);
+
+  if (isConfigPending || isChatsPending) {
+    return (
+      <div className="relative w-full h-full bg-slate-900 rounded-lg border border-slate-700 flex items-center justify-center">
+        <div className="text-white">Loading relationship graph...</div>
+      </div>
+    );
+  }
 
   return (
     <div

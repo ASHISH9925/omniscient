@@ -86,7 +86,7 @@ export const ProfileDetails = ({ isOpen, onClose, profile }: ProfileDetailsProps
             <div className="bg-slate-900 rounded-lg p-4">
               <h4 className="text-white font-semibold mb-3 flex items-center">
                 <MessageCircle className="h-4 w-4 mr-2 text-teal-500" />
-                Recent Chats
+                All Chat Messages
               </h4>
               <ScrollArea className="h-48">
                 <div className="space-y-3">

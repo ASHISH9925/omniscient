@@ -8,98 +8,6 @@ import { ChatDetails } from "@/components/ChatDetails";
 import { ProfileDetails } from "@/components/ProfileDetails";
 import { trpc } from "@/lib/api";
 
-// Mock profile data
-const mockProfileData = {
-  john: {
-    id: "john",
-    name: "John Doe",
-    type: "person" as const,
-    risk: "high" as const,
-    image:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-    mostUsedWords: [
-      { word: "meeting", count: 15 },
-      { word: "project", count: 12 },
-      { word: "urgent", count: 8 },
-      { word: "deadline", count: 6 },
-      { word: "confidential", count: 4 },
-    ],
-    recentChats: [
-      {
-        message: "Need to discuss the confidential project",
-        timestamp: "2h ago",
-        risk: "high",
-      },
-      {
-        message: "Urgent meeting required",
-        timestamp: "4h ago",
-        risk: "medium",
-      },
-      {
-        message: "Can you share the files?",
-        timestamp: "1d ago",
-        risk: "high",
-      },
-    ],
-  },
-  jane: {
-    id: "jane",
-    name: "Jane Smith",
-    type: "person" as const,
-    risk: "medium" as const,
-    image:
-      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face",
-    mostUsedWords: [
-      { word: "help", count: 10 },
-      { word: "support", count: 8 },
-      { word: "question", count: 6 },
-      { word: "issue", count: 5 },
-      { word: "problem", count: 4 },
-    ],
-    recentChats: [
-      {
-        message: "Can you help me with this?",
-        timestamp: "5m ago",
-        risk: "medium",
-      },
-      {
-        message: "I have a question about the system",
-        timestamp: "1h ago",
-        risk: "low",
-      },
-      {
-        message: "Support needed for the project",
-        timestamp: "3h ago",
-        risk: "medium",
-      },
-    ],
-  },
-  mike: {
-    id: "mike",
-    name: "Mike Johnson",
-    type: "person" as const,
-    risk: "low" as const,
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-    mostUsedWords: [
-      { word: "schedule", count: 7 },
-      { word: "meeting", count: 5 },
-      { word: "time", count: 4 },
-      { word: "calendar", count: 3 },
-      { word: "available", count: 2 },
-    ],
-    recentChats: [
-      { message: "Meeting at 3 PM", timestamp: "12m ago", risk: "low" },
-      { message: "Let me check my schedule", timestamp: "2h ago", risk: "low" },
-      {
-        message: "Are you available tomorrow?",
-        timestamp: "1d ago",
-        risk: "low",
-      },
-    ],
-  },
-};
-
 const Index = () => {
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
   const [selectedChatName, setSelectedChatName] = useState<string>("");
@@ -116,10 +24,77 @@ const Index = () => {
   };
 
   const handleNodeClick = (node: any) => {
-    const profile = mockProfileData[node.id as keyof typeof mockProfileData];
-    if (profile) {
-      setSelectedProfile(profile);
-      setIsProfileDialogOpen(true);
+    // Find the chat data for this user
+    if (chatsData?.messages) {
+      const chatIndex = chatsData.messages.findIndex(
+        chat => chat.username.toLowerCase().replace(/\s+/g, '-') === node.id
+      );
+      
+      if (chatIndex !== -1) {
+        const chat = chatsData.messages[chatIndex];
+        
+        // Calculate risk level based on message content
+        const allMessages = chat.messages.join(' ').toLowerCase();
+        const suspiciousWords = [
+          'drug', 'dealer', 'police', 'arrested', 'weed', 'steroids', 
+          'abduction', 'trafficking', 'mafia', 'illegal', 'smuggle',
+          'organ', 'spare parts', 'black money', 'cash', 'no upi'
+        ];
+        
+        const suspiciousScore = suspiciousWords.reduce((score, word) => {
+          return score + (allMessages.includes(word) ? 1 : 0);
+        }, 0);
+        
+        let risk: "high" | "medium" | "low" = "low";
+        if (suspiciousScore >= 5) risk = "high";
+        else if (suspiciousScore >= 2) risk = "medium";
+
+        // Get most used words from config data
+        let mostUsedWords: { word: string; count: number }[] = [];
+        if (config?.users) {
+          const userConfig = config.users.find(
+            user => user.username.toLowerCase().replace(/\s+/g, '-') === node.id
+          );
+          if (userConfig) {
+            mostUsedWords = userConfig.word_freq.map((word, index) => ({
+              word,
+              count: userConfig.len - index // Higher count for words that appear earlier in the list
+            }));
+          }
+        }
+
+        // Create profile object with all chat messages
+        const profile = {
+          id: node.id,
+          name: node.name,
+          type: node.type,
+          risk,
+          image: node.image,
+          mostUsedWords,
+          recentChats: chat.messages.map((message, index) => {
+            const colonIndex = message.indexOf(':');
+            if (colonIndex === -1) return null;
+            
+            const username = message.substring(0, colonIndex).trim();
+            const restOfMessage = message.substring(colonIndex + 1).trim();
+            const lastCommaIndex = restOfMessage.lastIndexOf(',');
+            
+            if (lastCommaIndex === -1) return null;
+            
+            const messageText = restOfMessage.substring(0, lastCommaIndex).trim();
+            const timestamp = restOfMessage.substring(lastCommaIndex + 1).trim();
+            
+            return {
+              message: messageText,
+              timestamp: timestamp,
+              risk: risk,
+            };
+          }).filter(Boolean),
+        };
+
+        setSelectedProfile(profile);
+        setIsProfileDialogOpen(true);
+      }
     }
   };
 
