@@ -2,21 +2,6 @@
 import { trpc } from '@/lib/api';
 import { MessageCircle, Clock, Eye } from 'lucide-react';
 
-type Data = {
-  messages: Array<{
-    username: string;
-    profile: {
-      username: string;
-      image: string;
-    };
-    messages: Array<string>;
-  }>;
-  current_user: {
-    name: string;
-    image: string;
-  };
-};
-
 interface SuspiciousChatsProps {
   onChatClick?: (chatId: number, chatName: string) => void;
 }
@@ -67,13 +52,6 @@ export const SuspiciousChats = ({ onChatClick }: SuspiciousChatsProps) => {
               <div className="flex justify-between items-start mb-2">
                 <div className="font-medium text-white">{chat.username}</div>
                 <div className="flex items-center space-x-2">
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    riskScore === 'high' ? 'bg-red-500/20 text-red-400' :
-                    riskScore === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                    'bg-green-500/20 text-green-400'
-                  }`}>
-                    {totalScore}
-                  </span>
                   <Eye className="h-4 w-4 text-slate-400 group-hover:text-teal-400 transition-colors" />
                 </div>
               </div>

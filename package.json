@@ -1,5 +1,15 @@
 {
-    "name": "omniscient-monorepo",
-    "version": "1.0.0",
-    "workspaces": ["packages/*"]
+  "name": "omniscient-monorepo",
+  "version": "1.0.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  },
+  "scripts": {
+    "run:server": "cd packages/server && bun run dev",
+    "run:client": "cd packages/client && bun run dev",
+    "dev": "concurrently --names \"server,client\" -c \"blue,green\" \"bun run run:server\" \"bun run run:client\""
   }
+}
