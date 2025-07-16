@@ -1,0 +1,13 @@
+services:
+  server:
+    container_name: omniscient-server
+    build:
+      context: ./packages/server
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-20000}:${PORT:-20000}"
+    environment:
+      PORT: 20000
+      NODE_ENV: production
+      ANTHROPIC_API_KEY: ""
+      

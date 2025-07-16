@@ -22,7 +22,7 @@ export const SuspiciousChats = ({ onChatClick }: SuspiciousChatsProps) => {
       <div className="p-4 border-b border-slate-700 flex-shrink-0">
         <h3 className="text-lg font-semibold text-white flex items-center">
           <MessageCircle className="h-5 w-5 mr-2 text-teal-500" />
-          Suspicious Chats
+          Chats
         </h3>
         <p className="text-sm text-slate-400 mt-1">Click on any chat to view all messages</p>
       </div>
