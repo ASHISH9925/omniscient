@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { MessageSquare, Send, Eye, Bot, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,12 @@ import { apiURL } from "@/lib/api";
 export const AskSherlock = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [width, setWidth] = useState(384); // 96 * 4 = 384px (w-96)
+  const [height, setHeight] = useState(600); // max-h-[600px]
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeType, setResizeType] = useState<'width' | 'height' | 'both' | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const {
     messages: chatMessages,
@@ -47,6 +52,41 @@ export const AskSherlock = () => {
     }
   };
 
+  const handleMouseDown = useCallback((e: React.MouseEvent, type: 'width' | 'height' | 'both') => {
+    e.preventDefault();
+    setIsResizing(true);
+    setResizeType(type);
+    
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = width;
+    const startHeight = height;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (type === 'width' || type === 'both') {
+        const deltaX = startX - e.clientX; // Negative because we want to increase width when dragging left
+        const newWidth = Math.max(320, Math.min(800, startWidth + deltaX));
+        setWidth(newWidth);
+      }
+      
+      if (type === 'height' || type === 'both') {
+        const deltaY = startY - e.clientY; // Negative because we want to increase height when dragging up
+        const newHeight = Math.max(300, Math.min(800, startHeight + deltaY));
+        setHeight(newHeight);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      setResizeType(null);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [width, height]);
+
   if (!isVisible) {
     return (
       <Button
@@ -61,7 +101,33 @@ export const AskSherlock = () => {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 w-96 bg-slate-800 rounded-lg border border-slate-700 shadow-xl max-h-[600px] flex flex-col">
+    <div 
+      ref={containerRef}
+      className="fixed bottom-4 right-4 bg-slate-800 rounded-lg border border-slate-700 shadow-xl flex flex-col"
+      style={{ 
+        width: `${width}px`, 
+        height: `${height}px`,
+        cursor: isResizing ? (resizeType === 'both' ? 'nw-resize' : resizeType === 'width' ? 'w-resize' : 'n-resize') : 'default'
+      }}
+    >
+      {/* Top resize handle */}
+      <div 
+        className="absolute top-0 left-0 right-0 h-1 cursor-n-resize hover:bg-teal-600/50 transition-colors"
+        onMouseDown={(e) => handleMouseDown(e, 'height')}
+      />
+      
+      {/* Left resize handle */}
+      <div 
+        className="absolute top-0 bottom-0 left-0 w-1 cursor-w-resize hover:bg-teal-600/50 transition-colors"
+        onMouseDown={(e) => handleMouseDown(e, 'width')}
+      />
+      
+      {/* Top-left corner resize handle */}
+      <div 
+        className="absolute top-0 left-0 w-3 h-3 cursor-nw-resize hover:bg-teal-600/50 transition-colors"
+        onMouseDown={(e) => handleMouseDown(e, 'both')}
+      />
+
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center">
@@ -79,7 +145,7 @@ export const AskSherlock = () => {
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[400px]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
         {chatMessages.map((msg) => (
           <div
             key={msg.id}
