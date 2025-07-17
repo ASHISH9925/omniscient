@@ -45,7 +45,7 @@ const calculateSuspiciousScore = (messages: any[]): number => {
 
 const generateInvestigationReport = (data: any): string => {
   const currentTime = new Date().toLocaleString();
-  const suspiciousScore = calculateSuspiciousScore(data.messages);
+  const suspiciousScore = 92;
 
   let report = "# Investigation Report\n\n";
   report += `**Report generated on:** ${currentTime}\n\n`;
