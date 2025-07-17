@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { MessageSquare, Send, Eye, Bot, User } from "lucide-react";
+import { MessageSquare, Send, Eye, Bot, User, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
@@ -7,7 +7,6 @@ import { apiURL } from "@/lib/api";
 
 export const AskSherlock = () => {
   const [isVisible, setIsVisible] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
   const [width, setWidth] = useState(384); // 96 * 4 = 384px (w-96)
   const [height, setHeight] = useState(600); // max-h-[600px]
   const [isResizing, setIsResizing] = useState(false);
@@ -20,6 +19,8 @@ export const AskSherlock = () => {
     input,
     handleInputChange,
     handleSubmit,
+    isLoading,
+    stop,
   } = useChat({
     api: apiURL + "/ai",
   });
@@ -134,6 +135,14 @@ export const AskSherlock = () => {
             <MessageSquare className="h-4 w-4 text-white" />
           </div>
           <span className="text-white font-medium">Ask Sherlock</span>
+          {isLoading && (
+            <div className="flex items-center space-x-1 ml-2">
+              <div className="w-1 h-1 bg-teal-400 rounded-full animate-pulse"></div>
+              <div className="w-1 h-1 bg-teal-400 rounded-full animate-pulse" style={{ animationDelay: "0.2s" }}></div>
+              <div className="w-1 h-1 bg-teal-400 rounded-full animate-pulse" style={{ animationDelay: "0.4s" }}></div>
+              <span className="text-teal-400 text-xs ml-1">typing...</span>
+            </div>
+          )}
         </div>
         <Button
           variant="ghost"
@@ -183,9 +192,9 @@ export const AskSherlock = () => {
           </div>
         ))}
 
-        {isLoading && (
+        {isLoading && chatMessages.length > 0 && chatMessages[chatMessages.length - 1].role === "user" && (
           <div className="flex justify-start">
-            <div className="bg-slate-700 text-slate-200 rounded-lg p-3">
+            <div className="bg-slate-700 text-slate-200 rounded-lg p-3 min-w-[80px]">
               <div className="flex items-center space-x-2">
                 <Bot className="h-4 w-4 text-teal-400" />
                 <div className="flex space-x-1">
@@ -199,6 +208,9 @@ export const AskSherlock = () => {
                     style={{ animationDelay: "0.2s" }}
                   ></div>
                 </div>
+              </div>
+              <div className="text-xs text-slate-400 mt-1">
+                Sherlock is thinking...
               </div>
             </div>
           </div>
@@ -216,15 +228,25 @@ export const AskSherlock = () => {
             className="flex-1 bg-slate-700 border-slate-600 text-white placeholder-slate-400"
             disabled={isLoading}
           />
-          <Button
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading}
-            className="bg-teal-600 hover:bg-teal-700 disabled:opacity-50"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+          {isLoading ? (
+            <Button
+              onClick={stop}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              title="Stop generation"
+            >
+              <Square className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-expect-error
+              onClick={handleSend}
+              disabled={!input.trim()}
+              className="bg-teal-600 hover:bg-teal-700 disabled:opacity-50"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
     </div>
